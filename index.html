@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador Zyx</title>
+<style>
+  :root{
+    --black:#000000;
+    --bg:#0a0a0a;
+    --panel:#121212;
+    --panel-border:#2a2a2a;
+    --gray-1:#3a3a3a;
+    --gray-2:#6b6b6b;
+    --gray-3:#9a9a9a;
+    --white:#f4f4f4;
+    --white-pure:#ffffff;
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html,body{
+    height:100%;
+    background:var(--black);
+    color:var(--white);
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x:hidden;
+  }
+
+  #stars{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index:0;
+    background:radial-gradient(ellipse at 50% 0%, #111 0%, #000 70%);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    z-index:2;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+  }
+
+  .glitch{
+    position:relative;
+    font-family:'Courier New', monospace;
+    font-weight:700;
+    font-size:clamp(3.5rem, 14vw, 9rem);
+    letter-spacing:0.08em;
+    color:var(--white-pure);
+    text-shadow:0 0 24px rgba(255,255,255,0.15);
+    animation:flicker 5s infinite;
+  }
+  .glitch::before,
+  .glitch::after{
+    content:attr(data-text);
+    position:absolute;
+    top:0; left:0; right:0;
+    overflow:hidden;
+  }
+  .glitch::before{
+    color:var(--gray-3);
+    animation:glitchTop 3.2s infinite linear alternate-reverse;
+    clip-path:polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  }
+  .glitch::after{
+    color:var(--gray-2);
+    animation:glitchBottom 2.6s infinite linear alternate-reverse;
+    clip-path:polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  }
+  @keyframes glitchTop{
+    0%{transform:translate(0,0);}
+    20%{transform:translate(-4px,-1px);}
+    40%{transform:translate(3px,1px);}
+    60%{transform:translate(-2px,0);}
+    80%{transform:translate(2px,-2px);}
+    100%{transform:translate(0,0);}
+  }
+  @keyframes glitchBottom{
+    0%{transform:translate(0,0);}
+    25%{transform:translate(4px,1px);}
+    50%{transform:translate(-3px,-1px);}
+    75%{transform:translate(2px,2px);}
+    100%{transform:translate(0,0);}
+  }
+  @keyframes flicker{
+    0%,93%,100%{opacity:1;}
+    94%{opacity:0.4;}
+    95%{opacity:1;}
+    96%{opacity:0.3;}
+    97%{opacity:1;}
+  }
+
+  .subtitle{
+    margin-top:18px;
+    font-size:0.85rem;
+    letter-spacing:0.5em;
+    color:var(--gray-3);
+    text-transform:uppercase;
+  }
+
+  .btn-main{
+    margin-top:56px;
+    padding:16px 52px;
+    background:transparent;
+    border:1px solid var(--gray-2);
+    border-radius:var(--radius);
+    color:var(--white);
+    font-size:0.95rem;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background .25s ease, color .25s ease, letter-spacing .25s ease;
+  }
+  .btn-main:hover{
+    background:var(--white-pure);
+    color:var(--black);
+    letter-spacing:0.45em;
+  }
+
+  /* ---------- SOCIAL DOCK ---------- */
+  .social-dock{
+    position:fixed;
+    bottom:28px;
+    right:28px;
+    display:flex;
+    gap:16px;
+    z-index:5;
+  }
+  .social-circle{
+    position:relative;
+    width:52px; height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    color:var(--white);
+  }
+  .social-circle .ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:conic-gradient(var(--white-pure) 0deg, transparent 90deg, transparent 270deg, var(--gray-1) 360deg);
+    animation:spin 4s linear infinite;
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  }
+  .social-circle .core{
+    position:relative;
+    width:40px; height:40px;
+    border-radius:50%;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .2s, border-color .2s;
+  }
+  .social-circle:hover .core{
+    background:var(--white-pure);
+    border-color:var(--white-pure);
+  }
+  .social-circle:hover svg{ fill:var(--black); }
+  .social-circle svg{ width:20px; height:20px; fill:var(--white); transition:fill .2s; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---------- PANEL ---------- */
+  .panel{
+    position:fixed;
+    inset:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.82);
+    backdrop-filter:blur(6px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .panel.open{ opacity:1; pointer-events:auto; }
+
+  .panel-inner{
+    position:relative;
+    width:min(420px, 90vw);
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius);
+    padding:40px 32px;
+    text-align:center;
+  }
+
+  .close-btn{
+    position:absolute;
+    top:12px; right:16px;
+    background:none;
+    border:none;
+    color:var(--gray-3);
+    font-size:1.4rem;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .close-btn:hover{ color:var(--white-pure); }
+
+  .panel-inner h2{
+    font-family:'Courier New', monospace;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    font-size:1.1rem;
+    margin-bottom:32px;
+    color:var(--white-pure);
+  }
+
+  .file-label{
+    display:block;
+    width:100%;
+    padding:14px;
+    background:none;
+    border:1px dashed var(--gray-2);
+    border-radius:var(--radius);
+    color:var(--gray-3);
+    font-size:0.85rem;
+    font-family:inherit;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    cursor:pointer;
+    -webkit-appearance:none;
+    appearance:none;
+    transition:border-color .2s, color .2s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .file-label:hover{ border-color:var(--white-pure); color:var(--white-pure); }
+
+  /* Escondido visualmente mas continua funcional em qualquer navegador/mobile */
+  .visually-hidden{
+    position:absolute;
+    width:1px; height:1px;
+    padding:0; margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+
+  .file-name{
+    display:block;
+    margin-top:8px;
+    font-size:0.78rem;
+    color:var(--gray-3);
+    word-break:break-all;
+    min-height:1em;
+  }
+
+  .field{
+    margin-top:22px;
+    text-align:left;
+  }
+  .field label{
+    display:block;
+    font-size:0.72rem;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--gray-3);
+    margin-bottom:8px;
+  }
+  .field input[type="text"]{
+    width:100%;
+    padding:12px 14px;
+    background:var(--black);
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius);
+    color:var(--white);
+    font-size:0.95rem;
+    outline:none;
+    transition:border-color .2s;
+  }
+  .field input[type="text"]:focus{ border-color:var(--white-pure); }
+
+  .btn-generate{
+    margin-top:30px;
+    width:100%;
+    padding:14px;
+    background:var(--white-pure);
+    color:var(--black);
+    border:none;
+    border-radius:var(--radius);
+    font-size:0.9rem;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:opacity .2s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-generate:hover{ opacity:0.85; }
+  .btn-generate:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .status{
+    margin-top:16px;
+    font-size:0.78rem;
+    color:var(--gray-3);
+    min-height:1.2em;
+  }
+  .status.ok{ color:var(--white-pure); }
+  .status.err{ color:var(--gray-3); }
+
+  @media (prefers-reduced-motion: reduce){
+    .glitch::before,.glitch::after,.glitch,.social-circle .ring{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="hero">
+  <h1 class="glitch" data-text="ZYX">ZYX</h1>
+  <p class="subtitle">Gerador Zyx</p>
+  <button id="openGenerator" class="btn-main">Gerador</button>
+</div>
+
+<div class="social-dock">
+  <a class="social-circle" href="https://discord.gg/dQuSyBU3z2" target="_blank" rel="noopener" aria-label="Discord">
+    <span class="ring"></span>
+    <span class="core">
+      <svg viewBox="0 0 28 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M23.6 2.3A21.3 21.3 0 0 0 18.2.6c-.24.43-.5 1-.7 1.46a19.7 19.7 0 0 0-5.9 0A13 13 0 0 0 10.9.6a21.2 21.2 0 0 0-5.4 1.7C1.9 7 1 11.5 1.4 16a21.5 21.5 0 0 0 6.5 3.3c.53-.72.99-1.5 1.4-2.3-.77-.29-1.5-.65-2.2-1.08.19-.14.37-.28.55-.43a15.3 15.3 0 0 0 13 0c.18.15.36.29.55.43-.7.43-1.44.79-2.2 1.08.4.8.87 1.58 1.4 2.3A21.4 21.4 0 0 0 27.1 16c.5-5.2-.86-9.66-3.5-13.7ZM10.2 13.3c-1.16 0-2.1-1.07-2.1-2.38 0-1.32.93-2.39 2.1-2.39 1.18 0 2.12 1.08 2.1 2.39 0 1.31-.92 2.38-2.1 2.38Zm8.1 0c-1.16 0-2.1-1.07-2.1-2.38 0-1.32.93-2.39 2.1-2.39 1.18 0 2.12 1.08 2.1 2.39 0 1.31-.91 2.38-2.1 2.38Z"/>
+      </svg>
+    </span>
+  </a>
+  <a class="social-circle" href="https://www.tiktok.com/@zgames128" target="_blank" rel="noopener" aria-label="TikTok">
+    <span class="ring"></span>
+    <span class="core">
+      <svg viewBox="0 0 24 24"><path d="M15 3c.4 2.2 1.8 3.6 4 3.9v2.8c-1.4 0-2.7-.4-3.8-1.2v6.6c0 3.3-2.6 5.9-5.9 5.9S3.4 18.4 3.4 15.1c0-3 2.2-5.5 5.1-5.8v2.9c-1.3.3-2.3 1.5-2.3 2.9 0 1.7 1.4 3 3 3s3.1-1.3 3.1-3V3H15Z"/></svg>
+    </span>
+  </a>
+</div>
+
+<div class="panel" id="panel">
+  <div class="panel-inner">
+    <button class="close-btn" id="closePanel" aria-label="Fechar">&times;</button>
+    <h2>Gerador</h2>
+
+    <button type="button" class="file-label" id="fileLabel">Escolher Arquivo</button>
+    <input class="visually-hidden" type="file" id="fileInput">
+    <span class="file-name" id="fileName"></span>
+
+    <div class="field">
+      <label for="nameInput">Nome</label>
+      <input type="text" id="nameInput" placeholder="Ex: Totem">
+    </div>
+
+    <button class="btn-generate" id="generateBtn">Gerar</button>
+    <p class="status" id="status"></p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+  /* ---------- Fundo: estrelas cadentes ---------- */
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let w, h, stars;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  function makeStars(n){
+    return Array.from({length:n}, () => ({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      len: 12 + Math.random()*40,
+      speed: 2 + Math.random()*5,
+      thick: 0.5 + Math.random()*1.2,
+      opacity: 0.2 + Math.random()*0.6
+    }));
+  }
+  function initStars(){
+    resize();
+    stars = makeStars(Math.floor((w*h)/9000));
+  }
+  function drawStars(){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,w,h);
+    for(const s of stars){
+      const grad = ctx.createLinearGradient(s.x, s.y, s.x, s.y - s.len);
+      grad.addColorStop(0, `rgba(255,255,255,${s.opacity})`);
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = s.thick;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x, s.y - s.len);
+      ctx.stroke();
+
+      s.y += s.speed;
+      if(s.y - s.len > h){
+        s.y = -s.len;
+        s.x = Math.random()*w;
+      }
+    }
+    requestAnimationFrame(drawStars);
+  }
+  window.addEventListener('resize', initStars);
+  initStars();
+  drawStars();
+
+  /* ---------- Painel do gerador ---------- */
+  const panel = document.getElementById('panel');
+  document.getElementById('openGenerator').addEventListener('click', () => panel.classList.add('open'));
+  document.getElementById('closePanel').addEventListener('click', () => panel.classList.remove('open'));
+  panel.addEventListener('click', (e) => { if(e.target === panel) panel.classList.remove('open'); });
+
+  const fileInput = document.getElementById('fileInput');
+  const fileLabel = document.getElementById('fileLabel');
+  const fileName = document.getElementById('fileName');
+  const nameInput = document.getElementById('nameInput');
+  const status = document.getElementById('status');
+  const generateBtn = document.getElementById('generateBtn');
+
+  // Garante que o seletor de arquivo abra em qualquer navegador/celular
+  fileLabel.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  let uploadedFile = null;
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0] || null;
+    if(file && !/\.(zip|mcpack)$/i.test(file.name)){
+      setStatus('Escolha um arquivo .zip ou .mcpack.', 'err');
+      fileName.textContent = '';
+      uploadedFile = null;
+      fileInput.value = '';
+      return;
+    }
+    uploadedFile = file;
+    fileName.textContent = uploadedFile ? uploadedFile.name : '';
+    status.textContent = '';
+    status.className = 'status';
+  });
+
+  function setStatus(msg, kind){
+    status.textContent = msg;
+    status.className = 'status ' + (kind || '');
+  }
+
+  // Gera um UUID v4 válido, aceito pelo Minecraft Bedrock
+  function uuidv4(){
+    if(window.crypto && crypto.randomUUID){
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  // Deriva o nome de saída a partir do arquivo original (tira .zip/.mcpack e usa .mcpack)
+  function getOutputFilename(originalName){
+    const base = originalName.replace(/\.(zip|mcpack)$/i, '');
+    return `${base}.mcpack`;
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    if(!uploadedFile){
+      setStatus('Escolha um arquivo primeiro.', 'err');
+      return;
+    }
+    const nome = nameInput.value.trim();
+    if(!nome){
+      setStatus('Digite um nome.', 'err');
+      return;
+    }
+
+    generateBtn.disabled = true;
+    setStatus('Processando...');
+
+    try{
+      const zip = await JSZip.loadAsync(uploadedFile);
+      // Object.keys(zip.files) já retorna todos os caminhos de TODAS as pastas e subpastas do pacote
+      const entryPaths = Object.keys(zip.files);
+      const toRemove = [];
+
+      // Remove qualquer arquivo (em qualquer pasta) cujo conteúdo mencione "powered by Luna"
+      for(const path of entryPaths){
+        const entry = zip.files[path];
+        if(entry.dir) continue;
+        try{
+          const text = await entry.async('string');
+          if(text.toLowerCase().includes('powered by luna')){
+            toRemove.push(path);
+          }
+        }catch(err){
+          // arquivo binário (textura, som, etc.) - ignora na varredura de texto
+        }
+      }
+      toRemove.forEach(p => zip.remove(p));
+
+      // Localiza o(s) manifest.json restante(s), em qualquer pasta
+      const manifestPaths = entryPaths.filter(p =>
+        p.toLowerCase().endsWith('manifest.json') && !toRemove.includes(p)
+      );
+
+      if(manifestPaths.length === 0){
+        setStatus('Nenhum manifest.json encontrado no arquivo.', 'err');
+        generateBtn.disabled = false;
+        return;
+      }
+
+      for(const manifestPath of manifestPaths){
+        const manifestFile = zip.file(manifestPath);
+        if(!manifestFile) continue;
+
+        const manifestText = await manifestFile.async('string');
+        let manifest = null;
+        try{ manifest = JSON.parse(manifestText); }catch(e){ manifest = null; }
+
+        if(!manifest || !manifest.header){
+          setStatus('manifest.json inválido no arquivo enviado.', 'err');
+          generateBtn.disabled = false;
+          return;
+        }
+
+        // Nome: mantém o sufixo de formatação (ex: "§0"), troca só o texto do nome
+        const original = manifest.header.name || '';
+        const codeMatch = original.match(/§.*/);
+        const suffix = codeMatch ? codeMatch[0] : '';
+        manifest.header.name = suffix ? `${nome} ${suffix}` : nome;
+        manifest.header.description = '§7By Zyx';
+
+        // UUIDs novos e válidos, aceitos pelo Minecraft como pacote de textura
+        manifest.header.uuid = uuidv4();
+        if(Array.isArray(manifest.modules)){
+          manifest.modules.forEach(mod => { mod.uuid = uuidv4(); });
+        }
+        if(Array.isArray(manifest.dependencies)){
+          manifest.dependencies.forEach(dep => { if(dep.uuid) dep.uuid = uuidv4(); });
+        }
+
+        zip.file(manifestPath, JSON.stringify(manifest, null, 2));
+      }
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = getOutputFilename(uploadedFile.name);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus('Pacote gerado com sucesso.', 'ok');
+    }catch(err){
+      console.error(err);
+      setStatus('Erro ao processar o arquivo.', 'err');
+    }finally{
+      generateBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
